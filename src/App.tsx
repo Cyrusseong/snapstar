@@ -3,17 +3,21 @@ import maplibregl from 'maplibre-gl';
 import MapView from './components/Map/MapView';
 import ViewToggle from './components/UI/ViewToggle';
 import PhotoZoneNav from './components/Navigation/PhotoZoneNav';
+import { TourMode } from './components/Navigation/TourMode';
 import { PhotoZonePanel } from './components/Panel/PhotoZonePanel';
 import { BottomSheet } from './components/Panel/BottomSheet';
 import { usePhotoZone } from './hooks/usePhotoZone';
 import { useMap } from './hooks/useMap';
+import { useTour } from './hooks/useTour';
 import { flyToPhotoZone, flyToOverview, toggle3DDirection } from './utils/camera';
+import { photozones } from './data/photozones';
 import type { PhotoZone } from './types/photozone';
 
 export default function App() {
   const mapRef = useMap();
   const { selectedZone, setSelectedZone, clearSelection, viewMode, setViewMode } = usePhotoZone();
   const viewModeRef = useRef<'2d' | '3d'>('2d');
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // 반응형 모바일/데스크탑 분기 (768px 기준)
   const [isMobile, setIsMobile] = useState(() =>
@@ -27,7 +31,20 @@ export default function App() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  const tour = useTour(mapLoaded ? mapRef.current : null, photozones);
+
+  // 투어 활성 중 currentIndex 변경 → 해당 포토존 패널 자동 표시
+  useEffect(() => {
+    if (tour.isActive) {
+      setSelectedZone(photozones[tour.currentIndex]);
+    }
+  }, [tour.isActive, tour.currentIndex, setSelectedZone]);
+
   function handleZoneSelect(zone: PhotoZone) {
+    // 투어 중 수동 클릭 → 투어 종료 후 해당 포토존 선택
+    if (tour.isActive) {
+      tour.stop();
+    }
     setSelectedZone(zone);
     if (mapRef.current) {
       flyToPhotoZone(mapRef.current, zone, viewModeRef.current);
@@ -35,6 +52,9 @@ export default function App() {
   }
 
   function handleClearSelection() {
+    if (tour.isActive) {
+      tour.stop();
+    }
     clearSelection();
     setViewMode('2d');
     viewModeRef.current = '2d';
@@ -54,6 +74,14 @@ export default function App() {
 
   function handleMapReady(map: maplibregl.Map) {
     mapRef.current = map;
+    setMapLoaded(true);
+  }
+
+  function handleTourStart() {
+    clearSelection();
+    setViewMode('2d');
+    viewModeRef.current = '2d';
+    tour.start();
   }
 
   return (
@@ -61,8 +89,16 @@ export default function App() {
       {/* 헤더 — 모바일에서 48px으로 축소 */}
       <header className="h-12 md:h-14 flex items-center justify-between px-4 bg-white border-b border-gray-200 shrink-0">
         <div className="text-base md:text-lg font-semibold">📸 SnapStar</div>
-        {/* 모바일: 햄버거만 표시 */}
-        <div className="flex md:hidden items-center">
+        {/* 모바일: 햄버거 + 투어 버튼 */}
+        <div className="flex md:hidden items-center gap-2">
+          {!tour.isActive && (
+            <button
+              onClick={handleTourStart}
+              className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+            >
+              ▶ 투어
+            </button>
+          )}
           <button className="w-8 h-8 flex items-center justify-center text-gray-600" aria-label="메뉴">
             ≡
           </button>
@@ -75,14 +111,35 @@ export default function App() {
           >
             🗼 전체보기
           </button>
-          <button className="px-3 py-1 text-sm border border-gray-300 rounded">▶ 투어</button>
+          {!tour.isActive && (
+            <button
+              onClick={handleTourStart}
+              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+            >
+              ▶ 투어
+            </button>
+          )}
           <button className="px-3 py-1 text-sm border border-gray-300 rounded">KR</button>
         </div>
       </header>
 
+      {/* 투어 진행바 (투어 활성 시에만) */}
+      {tour.isActive && (
+        <TourMode
+          zones={photozones}
+          currentIndex={tour.currentIndex}
+          isPaused={tour.isPaused}
+          onPause={tour.pause}
+          onResume={tour.resume}
+          onSkip={tour.skip}
+          onStop={tour.stop}
+          onSkipTo={tour.skipTo}
+        />
+      )}
+
       {/* 메인 영역 */}
       <main className="flex-1 flex overflow-hidden">
-        {/* 지도 + 플로팅 버튼 + 바텀시트(모바일) */}
+        {/* 지도 + 플로팅 버튼 + 로딩 인디케이터 + 바텀시트(모바일) */}
         <div className="flex-1 relative min-w-0">
           <MapView
             selectedZone={selectedZone}
@@ -90,6 +147,18 @@ export default function App() {
             onZoneSelect={handleZoneSelect}
             onMapReady={handleMapReady}
           />
+
+          {/* 맵 로딩 인디케이터 */}
+          {!mapLoaded && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
+              <div
+                className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full mb-3"
+                style={{ animation: 'spin 1s linear infinite' }}
+              />
+              <span className="text-sm text-gray-600">🗺️ 지도 로딩 중...</span>
+            </div>
+          )}
+
           <ViewToggle
             selectedZone={selectedZone}
             viewMode={viewMode}
