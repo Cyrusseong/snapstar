@@ -24,7 +24,7 @@ export function addPhotoMarkers(
     el.style.border = '3px solid white';
     el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
     el.style.cursor = 'pointer';
-    el.style.transition = 'transform 0.2s, border-color 0.2s';
+    el.style.transition = 'scale 0.2s, border-color 0.2s';
     el.style.overflow = 'hidden';
     el.style.display = 'flex';
     el.style.alignItems = 'center';
@@ -51,12 +51,12 @@ export function addPhotoMarkers(
     // 호버 애니메이션 (선택된 마커는 scale 유지)
     el.addEventListener('mouseenter', () => {
       if (el.dataset.selected !== 'true') {
-        el.style.transform = 'scale(1.3)';
+        el.style.scale = '1.3';
       }
     });
     el.addEventListener('mouseleave', () => {
       if (el.dataset.selected !== 'true') {
-        el.style.transform = 'scale(1)';
+        el.style.scale = '1';
       }
     });
     el.addEventListener('click', () => onSelect(zone));
@@ -75,6 +75,6 @@ export function updateMarkerSelection(handles: MarkerHandle[], selectedId: strin
     const isSelected = zone.id === selectedId;
     element.dataset.selected = isSelected ? 'true' : 'false';
     element.style.border = isSelected ? '3px solid #3B82F6' : '3px solid white';
-    element.style.transform = isSelected ? 'scale(1.15)' : 'scale(1)';
+    element.style.scale = isSelected ? '1.15' : '1';
   });
 }
