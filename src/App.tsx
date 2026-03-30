@@ -9,7 +9,7 @@ import { BottomSheet } from './components/Panel/BottomSheet';
 import { usePhotoZone } from './hooks/usePhotoZone';
 import { useMap } from './hooks/useMap';
 import { useTour } from './hooks/useTour';
-import { flyToPhotoZone, flyToOverview, toggle3DDirection } from './utils/camera';
+import { flyToPhotoZone, flyToOverview, toggle3DDirection, setMapLanguage, type MapLang } from './utils/camera';
 import { photozones } from './data/photozones';
 import type { PhotoZone } from './types/photozone';
 
@@ -18,6 +18,9 @@ export default function App() {
   const { selectedZone, setSelectedZone, clearSelection, viewMode, setViewMode } = usePhotoZone();
   const viewModeRef = useRef<'2d' | '3d'>('2d');
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [lang, setLang] = useState<MapLang>('ko');
+  const LANG_CYCLE: MapLang[] = ['ko', 'en', 'ja'];
+  const LANG_LABEL: Record<MapLang, string> = { ko: 'KR', en: 'EN', ja: 'JP' };
 
   // 반응형 모바일/데스크탑 분기 (768px 기준)
   const [isMobile, setIsMobile] = useState(() =>
@@ -77,6 +80,18 @@ export default function App() {
     setMapLoaded(true);
   }
 
+  // 언어 변경 → 지도 표기 즉시 갱신
+  useEffect(() => {
+    if (mapLoaded && mapRef.current) {
+      setMapLanguage(mapRef.current, lang);
+    }
+  }, [lang, mapLoaded]);
+
+  function handleLangToggle() {
+    const next = LANG_CYCLE[(LANG_CYCLE.indexOf(lang) + 1) % LANG_CYCLE.length];
+    setLang(next);
+  }
+
   function handleTourStart() {
     clearSelection();
     setViewMode('2d');
@@ -119,7 +134,12 @@ export default function App() {
               ▶ 투어
             </button>
           )}
-          <button className="px-3 py-1 text-sm border border-gray-300 rounded">KR</button>
+          <button
+            onClick={handleLangToggle}
+            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 font-medium"
+          >
+            {LANG_LABEL[lang]}
+          </button>
         </div>
       </header>
 

@@ -36,3 +36,19 @@ export function toggle3DDirection(map: maplibregl.Map, is3D: boolean) {
     duration: 1000,
   });
 }
+
+export type MapLang = 'ko' | 'en' | 'ja';
+
+// 지도 표기 언어 전환 (OpenMapTiles 스키마 공통)
+export function setMapLanguage(map: maplibregl.Map, lang: MapLang) {
+  const field =
+    lang === 'ja'
+      ? ['coalesce', ['get', 'name:ja'], ['get', 'name']]
+      : ['coalesce', ['get', `name:${lang}`], ['get', 'name:ja'], ['get', 'name']];
+
+  map.getStyle().layers.forEach((layer) => {
+    if (layer.type === 'symbol' && (layer.layout as Record<string, unknown>)?.['text-field']) {
+      map.setLayoutProperty(layer.id, 'text-field', field);
+    }
+  });
+}
