@@ -15,32 +15,32 @@
 
 ```
 src/
-├── App.tsx                        ← 메인 레이아웃 + 상태 관리 (Phase 2 완료)
+├── App.tsx                        ← 메인 레이아웃 + 상태 관리 (MVP 완료)
 ├── main.tsx
-├── index.css                      ← Tailwind + MapLibre CSS import
-├── data/photozones.ts             ← 7개 포토존 데이터
+├── index.css                      ← Tailwind + MapLibre CSS + spin 키프레임
+├── data/photozones.ts             ← 7개 포토존 데이터 (ID 1개 실제값 적용)
 ├── types/photozone.ts             ← PhotoZone, MapViewState 타입
 ├── components/
-│   ├── Map/MapView.tsx            ← MapLibre 지도 + 마커/방향/3D 통합 (Phase 2 완료)
-│   ├── Map/PhotoMarker.tsx        ← 인스타 썸네일 마커 (Phase 2 완료)
-│   ├── Map/DirectionArrow.tsx     ← 촬영 방향 화살표+부채꼴 레이어 (Phase 2 완료)
-│   ├── Map/Buildings3D.tsx        ← fill-extrusion 3D 건물 (Phase 2 완료)
-│   ├── Panel/PhotoZonePanel.tsx   ← 사이드 패널 (Phase 3 완료)
-│   ├── Panel/BottomSheet.tsx      ← 모바일 바텀시트 (Phase 3 완료)
-│   ├── Panel/InstagramEmbed.tsx   ← 인스타 임베드 (Phase 3 완료)
-│   ├── Panel/YouTubePlayer.tsx    ← 유튜브 플레이어 (Phase 3 완료)
-│   ├── Panel/ShootingInfo.tsx     ← 촬영 정보 카드 (Phase 3 완료)
-│   ├── Navigation/PhotoZoneNav.tsx ← 하단 네비바 (Phase 2 완료)
-│   ├── Navigation/TourMode.tsx    ← 투어 진행바 UI (Phase 4 완료)
-│   ├── UI/Header.tsx              ← TODO (미구현, 헤더는 App.tsx 인라인)
-│   └── UI/ViewToggle.tsx          ← 2D/3D 토글 버튼 (Phase 2 완료)
+│   ├── Map/MapView.tsx            ← MapLibre 지도 + 마커/방향/3D 통합
+│   ├── Map/PhotoMarker.tsx        ← 인스타 썸네일 마커 (호버 떨림 버그 수정 완료)
+│   ├── Map/DirectionArrow.tsx     ← 촬영 방향 화살표+부채꼴 레이어
+│   ├── Map/Buildings3D.tsx        ← fill-extrusion 3D 건물
+│   ├── Panel/PhotoZonePanel.tsx   ← 사이드 패널 (Desktop)
+│   ├── Panel/BottomSheet.tsx      ← 모바일 바텀시트
+│   ├── Panel/InstagramEmbed.tsx   ← 인스타 임베드
+│   ├── Panel/YouTubePlayer.tsx    ← 유튜브 플레이어
+│   ├── Panel/ShootingInfo.tsx     ← 촬영 정보 카드
+│   ├── Navigation/PhotoZoneNav.tsx ← 하단 네비바
+│   ├── Navigation/TourMode.tsx    ← 투어 진행바 UI
+│   ├── UI/Header.tsx              ← 미구현 (헤더는 App.tsx 인라인으로 처리)
+│   └── UI/ViewToggle.tsx          ← 2D/3D 토글 버튼
 ├── hooks/
-│   ├── useMap.ts                  ← 맵 ref 홀더 (Phase 2 완료)
-│   ├── usePhotoZone.ts            ← 선택 상태 + viewMode 관리 (Phase 2 완료)
-│   └── useTour.ts                 ← 투어 모드 로직 (Phase 4 완료)
+│   ├── useMap.ts                  ← 맵 ref 홀더
+│   ├── usePhotoZone.ts            ← 선택 상태 + viewMode 관리
+│   └── useTour.ts                 ← 투어 모드 로직
 └── utils/
-    ├── geo.ts                     ← destinationPoint + createDirectionGeoJSON (Phase 2 완료)
-    └── camera.ts                  ← flyToPhotoZone / flyToOverview / toggle3DDirection (Phase 2 완료)
+    ├── geo.ts                     ← destinationPoint + createDirectionGeoJSON
+    └── camera.ts                  ← flyToPhotoZone / flyToOverview / toggle3DDirection / setMapLanguage
 ```
 
 ## 개발 명령어
@@ -75,7 +75,6 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - MapLibre 지도 렌더링 (도쿄타워 중심, zoom 15)
 - 기본 레이아웃: 헤더 + 맵 + 하단 네비바
 - 7개 포토존 데이터 및 타입 정의 완료
-- Phase 2~4 컴포넌트 빈 파일(TODO) 생성 완료
 
 **Phase 2 완료** (2026-03-30)
 - 7개 포토존 마커 (이모지 placeholder, 이미지 파일 추가 시 자동 전환)
@@ -102,31 +101,55 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - OG 태그 + Twitter 카드 메타 태그 추가
 - 파비콘: 카메라 아이콘 SVG로 교체
 - vercel.json: buildCommand/outputDirectory/framework 필드 추가
-- `npm run build` 성공 확인
 
-## 다음 단계 (배포 전 필요 작업)
+**Phase 4 이후 추가 완료** (2026-03-30)
+- 마커 호버 위치 이탈 버그 수정: `el.style.transform` → CSS `scale` 프로퍼티
+- 마커 호버 떨림 버그 수정: 외부 컨테이너(64px 히트 영역) + 내부 시각 요소(48px) 분리
+- 지도 언어 전환: 헤더 버튼으로 KR → EN → JP → KR 순환 (`setMapLanguage` in camera.ts)
+- Instagram embed 실제 동작 확인 (`DMpppNRTDJ_` 샘플 포스트 테스트 완료)
 
-- [ ] 실제 인스타 포스트 ID 7개 교체 (`src/data/photozones.ts` > `instagramPostId`)
-- [ ] 실제 유튜브 영상 ID 7개 교체 (`youtubeVideoId`)
-- [ ] 썸네일 이미지 7장 준비 → `public/images/thumbnails/` 에 추가
-- [ ] MapTiler API 키 설정 (Vercel 대시보드 환경변수 `VITE_MAPTILER_KEY`)
+## 배포 전 남은 작업
+
+- [ ] 인스타 포스트 ID 나머지 6개 교체 (`src/data/photozones.ts` — `prince-shiba`는 완료)
+- [ ] 유튜브 영상 ID 7개 교체 (`youtubeVideoId`)
+- [ ] 썸네일 이미지 7장 준비 → `public/images/thumbnails/`
 - [ ] OG 이미지 준비 → `public/images/og-image.png` (1200×630px 권장)
-- [ ] Vercel 배포: `vercel` CLI 또는 GitHub 연동
+- [ ] MapTiler API 키 설정 (Vercel 대시보드 환경변수 `VITE_MAPTILER_KEY`)
+- [ ] 모바일 헤더 언어 버튼 노출 여부 결정 (현재 데스크탑 전용)
+- [ ] Vercel 배포
+
+## 알려진 제약사항
+
+- **인스타 캐러셀 슬라이드 감지 불가**: Instagram embed는 cross-origin iframe이므로 현재 슬라이드를 JS로 감지할 수 없음. 슬라이드별 포토존 연동이 필요하면 Instagram Graph API로 이미지를 직접 fetch해서 자체 캐러셀로 구현해야 함
+- **모바일 언어 버튼 미노출**: 현재 언어 전환 버튼이 데스크탑 헤더에만 있고 모바일에는 없음
 
 ## 주의사항
 
 - `VITE_MAPTILER_KEY`가 `placeholder_replace_me`이면 OpenFreeMap 폴백으로 작동
-- 인스타/유튜브 ID는 현재 placeholder (`INSTAGRAM_POST_ID_1` 형태) — 실제 ID로 교체 필요
 - `docs/` 폴더의 기획 문서는 수정하지 않는다
 - node 경로: `/opt/homebrew/Cellar/node@22/22.22.2/bin` (PATH에 없으면 직접 지정 필요)
 
+## 마커 호버 구조 (PhotoMarker.tsx)
+
+호버 떨림 방지를 위해 2중 구조 사용:
+- `el` (64px): MapLibre가 위치 제어 + 마우스 이벤트 감지 (히트 영역)
+- `inner` (48px): 시각적 마커 요소, `transform: scale()` 적용 대상
+- 48px * 1.3(최대 scale) = 62.4px < 64px(el) → 마우스가 항상 el 안에 유지
+
+## 지도 언어 전환 (camera.ts > setMapLanguage)
+
+- OpenMapTiles 스키마 공통: 모든 symbol 레이어의 `text-field` 교체
+- `ko`: `['coalesce', ['get', 'name:ko'], ['get', 'name:ja'], ['get', 'name']]`
+- `en`: `['coalesce', ['get', 'name:en'], ['get', 'name:ja'], ['get', 'name']]`
+- `ja`: `['coalesce', ['get', 'name:ja'], ['get', 'name']]`
+- MapTiler, OpenFreeMap 두 스타일 모두 동작
+
 ## 투어 모드 주의사항
 
-- `useTour.ts`: stale closure 방지를 위해 `currentIndexRef` + `mapRef` 사용 (useEffect 콜백 내에서 최신값 참조)
+- `useTour.ts`: stale closure 방지를 위해 `currentIndexRef` + `mapRef` 사용
 - 투어 시작 시 `mapLoaded` 상태로 map 인스턴스 준비 여부 확인 후 훅에 전달
 - 투어 활성 중 `currentIndex` 변경 → App.tsx의 useEffect가 `setSelectedZone` 호출 → 패널 자동 표시
 - 수동 마커/네비바 클릭 → `handleZoneSelect`에서 `tour.stop()` 먼저 호출 후 포토존 선택
-- `TourMode.tsx`는 헤더 바로 아래 `shrink-0` flex 아이템으로 배치 (레이아웃 밀림 없음)
 
 ## fill-extrusion 3D 건물 소스 탐지
 
@@ -142,7 +165,6 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - `window.instgrm` 타입은 `InstagramEmbed.tsx`의 `declare global` 블록에 선언
 - postId가 `'INSTAGRAM_POST_ID'`로 시작하면 실제 임베드 시도하지 않고 placeholder UI 표시
 - embed.js가 async/defer로 로드되므로, 컴포넌트 마운트 시점에 `window.instgrm`이 없을 수 있음 → `window.instgrm?.Embeds.process()` 방식으로 안전하게 처리
-- 실제 postId가 세팅되면 useEffect의 의존성 배열([postId])에 의해 자동 재처리됨
 
 ## 아키텍처 결정사항 (Phase 2)
 
