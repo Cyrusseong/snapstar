@@ -85,7 +85,16 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - fill-extrusion 3D 건물 레이어 (소스 자동 탐지)
 - 하단 네비바 선택 하이라이트 + 전체보기 복귀
 
-**Phase 3 대기** — 사이드 패널, 인스타 임베드, 유튜브 플레이어, 촬영 정보, 모바일 바텀시트
+**Phase 3 완료** (2026-03-30)
+- 사이드 패널 (Desktop, 400px, 슬라이드 애니메이션)
+- 인스타 임베드 (placeholder UI 포함)
+- 유튜브 플레이어 (placeholder UI 포함, 16:9 aspect-ratio)
+- 촬영 정보 카드 (팁/방향/거리/혼잡도/난이도/추천시간)
+- 모바일 바텀시트 (3단계 스냅: collapsed/middle/expanded, 터치 드래그)
+- 반응형 분기: 768px 기준 window.matchMedia
+- 모바일 헤더: 48px + 햄버거 아이콘
+
+**Phase 4 대기** — 투어 모드
 
 ## 주의사항
 
@@ -102,6 +111,14 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - 두 속성 모두 `coalesce`로 처리하므로 어느 쪽이든 작동
 - 소스 탐지 실패 시 콘솔에 `[Buildings3D]` 경고 + `Object.keys(sources)` 출력
 
+## Instagram embed.js 주의사항
+
+- `index.html`에 `<script async defer src="https://www.instagram.com/embed.js"></script>` 추가
+- `window.instgrm` 타입은 `InstagramEmbed.tsx`의 `declare global` 블록에 선언
+- postId가 `'INSTAGRAM_POST_ID'`로 시작하면 실제 임베드 시도하지 않고 placeholder UI 표시
+- embed.js가 async/defer로 로드되므로, 컴포넌트 마운트 시점에 `window.instgrm`이 없을 수 있음 → `window.instgrm?.Embeds.process()` 방식으로 안전하게 처리
+- 실제 postId가 세팅되면 useEffect의 의존성 배열([postId])에 의해 자동 재처리됨
+
 ## 아키텍처 결정사항 (Phase 2)
 
 - MapView는 map 인스턴스를 내부 ref로 관리, `onMapReady(map)` 콜백으로 App에 전달
@@ -109,3 +126,11 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - stale closure 방지: `onZoneSelectRef`, `onMapReadyRef`로 최신 콜백 유지
 - viewMode는 App의 state + ref 이중 관리 (state: 렌더링, ref: 콜백 내 최신값)
 - selectedZone 변경 → useEffect로 direction layer + marker selection 갱신
+
+## 아키텍처 결정사항 (Phase 3)
+
+- PhotoZonePanel: `width` inline style + CSS transition으로 슬라이드 애니메이션 (Tailwind 동적 클래스 purge 이슈 회피)
+- BottomSheet: snap state('collapsed'|'middle'|'expanded') + touchstart/move/end 이벤트로 드래그 구현. 드래그 중에는 `transition: none`, 드래그 종료 시 `transition: ''`로 복원 후 snap height 적용
+- 반응형 분기: App.tsx에서 `window.matchMedia('(max-width: 767px)')` 로 isMobile state 관리. MediaQueryList `change` 이벤트로 리사이즈 대응
+- BottomSheet는 맵 컨테이너(`relative`) 내부에 `absolute bottom-0`으로 배치
+- 모바일/데스크탑 각각의 컴포넌트를 `isMobile` state로 조건부 렌더링 (CSS hidden 아닌 js 분기)
