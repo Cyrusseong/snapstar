@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import maplibregl from 'maplibre-gl';
-import { INITIAL_VIEW, photozones } from '../../data/photozones';
+import { INITIAL_VIEW } from '../../data/photozones';
 import type { PhotoZone } from '../../types/photozone';
 import { addPhotoMarkers, updateMarkerSelection, type MarkerHandle } from './PhotoMarker';
 import { addDirectionLayers, updateDirectionLayer } from './DirectionArrow';
@@ -13,22 +13,34 @@ const MAP_STYLE =
     : 'https://tiles.openfreemap.org/styles/liberty';
 
 interface MapViewProps {
+  zones: PhotoZone[];
   selectedZone: PhotoZone | null;
   viewMode: '2d' | '3d';
   onZoneSelect: (zone: PhotoZone) => void;
   onMapReady?: (map: maplibregl.Map) => void;
 }
 
-export default function MapView({ selectedZone, viewMode: _viewMode, onZoneSelect, onMapReady }: MapViewProps) {
+export default function MapView({ zones, selectedZone, viewMode: _viewMode, onZoneSelect, onMapReady }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<MarkerHandle[]>([]);
+  const mapLoadedRef = useRef(false);
   // 항상 최신 콜백을 유지하는 ref (stale closure 방지)
   const onZoneSelectRef = useRef(onZoneSelect);
   const onMapReadyRef = useRef(onMapReady);
+  const zonesRef = useRef(zones);
 
   useEffect(() => { onZoneSelectRef.current = onZoneSelect; });
   useEffect(() => { onMapReadyRef.current = onMapReady; });
+  useEffect(() => { zonesRef.current = zones; });
+
+  // 마커 재생성 헬퍼
+  function rebuildMarkers(map: maplibregl.Map) {
+    markersRef.current.forEach((m) => m.marker.remove());
+    markersRef.current = addPhotoMarkers(map, zonesRef.current, (zone) =>
+      onZoneSelectRef.current(zone)
+    );
+  }
 
   // 맵 초기화 (마운트 시 1회)
   useEffect(() => {
@@ -47,10 +59,12 @@ export default function MapView({ selectedZone, viewMode: _viewMode, onZoneSelec
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     map.on('load', () => {
-      // 마커 추가 (onZoneSelectRef로 최신 콜백 보장)
-      markersRef.current = addPhotoMarkers(map, photozones, (zone) =>
-        onZoneSelectRef.current(zone)
-      );
+      mapLoadedRef.current = true;
+
+      // zones가 이미 로드됐으면 마커 즉시 추가, 아니면 zones effect가 처리
+      if (zonesRef.current.length > 0) {
+        rebuildMarkers(map);
+      }
 
       // 방향 표시 레이어 추가
       addDirectionLayers(map);
@@ -68,8 +82,16 @@ export default function MapView({ selectedZone, viewMode: _viewMode, onZoneSelec
       map.remove();
       mapRef.current = null;
       markersRef.current = [];
+      mapLoadedRef.current = false;
     };
   }, []);
+
+  // zones 변경 시 마커 재생성 (맵 로드 완료 + zones 비어있지 않을 때)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoadedRef.current || zones.length === 0) return;
+    rebuildMarkers(map);
+  }, [zones]);
 
   // selectedZone 변경 시 방향 레이어 + 마커 선택 상태 업데이트
   useEffect(() => {

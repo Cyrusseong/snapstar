@@ -9,12 +9,13 @@ import { BottomSheet } from './components/Panel/BottomSheet';
 import { usePhotoZone } from './hooks/usePhotoZone';
 import { useMap } from './hooks/useMap';
 import { useTour } from './hooks/useTour';
+import { usePhotozones } from './hooks/usePhotozones';
 import { flyToPhotoZone, flyToOverview, toggle3DDirection, setMapLanguage, type MapLang } from './utils/camera';
-import { photozones } from './data/photozones';
 import type { PhotoZone } from './types/photozone';
 
 export default function App() {
   const mapRef = useMap();
+  const { photozones, isLoading: photozonesLoading } = usePhotozones();
   const { selectedZone, setSelectedZone, clearSelection, viewMode, setViewMode } = usePhotoZone();
   const viewModeRef = useRef<'2d' | '3d'>('2d');
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -162,14 +163,15 @@ export default function App() {
         {/* 지도 + 플로팅 버튼 + 로딩 인디케이터 + 바텀시트(모바일) */}
         <div className="flex-1 relative min-w-0">
           <MapView
+            zones={photozones}
             selectedZone={selectedZone}
             viewMode={viewMode}
             onZoneSelect={handleZoneSelect}
             onMapReady={handleMapReady}
           />
 
-          {/* 맵 로딩 인디케이터 */}
-          {!mapLoaded && (
+          {/* 맵 로딩 인디케이터 (맵 또는 포토존 데이터 로딩 중) */}
+          {(!mapLoaded || photozonesLoading) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-10">
               <div
                 className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full mb-3"
@@ -198,6 +200,7 @@ export default function App() {
 
       {/* 하단 네비바 */}
       <PhotoZoneNav
+        zones={photozones}
         selectedZone={selectedZone}
         onSelect={handleZoneSelect}
         onClearSelection={handleClearSelection}

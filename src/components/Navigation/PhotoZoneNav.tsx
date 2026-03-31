@@ -1,14 +1,14 @@
-import { photozones } from '../../data/photozones';
 import type { PhotoZone } from '../../types/photozone';
 
 interface PhotoZoneNavProps {
+  zones: PhotoZone[];
   selectedZone: PhotoZone | null;
   onSelect: (zone: PhotoZone) => void;
   onClearSelection: () => void;
 }
 
-// 하단 네비게이션 바 — 전체보기 + 7개 포토존 선택
-export default function PhotoZoneNav({ selectedZone, onSelect, onClearSelection }: PhotoZoneNavProps) {
+// 하단 네비게이션 바 — 전체보기 + 포토존 선택
+export default function PhotoZoneNav({ zones, selectedZone, onSelect, onClearSelection }: PhotoZoneNavProps) {
   return (
     <nav className="h-16 flex items-center gap-1 px-4 bg-white border-t border-gray-200 shrink-0 overflow-x-auto">
       {/* 전체보기 버튼 */}
@@ -24,8 +24,8 @@ export default function PhotoZoneNav({ selectedZone, onSelect, onClearSelection 
         <span className="whitespace-nowrap">전체보기</span>
       </button>
 
-      {/* 7개 포토존 */}
-      {photozones.map((zone) => (
+      {/* 포토존 목록 */}
+      {zones.map((zone) => (
         <button
           key={zone.id}
           onClick={() => onSelect(zone)}

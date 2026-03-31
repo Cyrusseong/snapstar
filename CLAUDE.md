@@ -37,7 +37,8 @@ src/
 ├── hooks/
 │   ├── useMap.ts                  ← 맵 ref 홀더
 │   ├── usePhotoZone.ts            ← 선택 상태 + viewMode 관리
-│   └── useTour.ts                 ← 투어 모드 로직
+│   ├── useTour.ts                 ← 투어 모드 로직
+│   └── usePhotozones.ts           ← JSON fetch + 폴백 훅
 └── utils/
     ├── geo.ts                     ← destinationPoint + createDirectionGeoJSON
     └── camera.ts                  ← flyToPhotoZone / flyToOverview / toggle3DDirection / setMapLanguage
@@ -108,9 +109,15 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - 지도 언어 전환: 헤더 버튼으로 KR → EN → JP → KR 순환 (`setMapLanguage` in camera.ts)
 - Instagram embed 실제 동작 확인 (`DMpppNRTDJ_` 샘플 포스트 테스트 완료)
 
+**포토존 데이터 동적 로딩** (2026-03-31)
+- `src/hooks/usePhotozones.ts`: `public/data/photozones.json` fetch → 빈 배열이면 `FALLBACK_PHOTOZONES` 사용
+- `src/data/photozones.ts`: `photozones` 배열 → `FALLBACK_PHOTOZONES`로 이름 변경 (폴백용)
+- `MapView`, `PhotoZoneNav`: `photozones` 직접 import 제거 → `zones` prop으로 받도록 변경
+- engine에서 JSON export: `python export.py --output ../snapstar/public/data/photozones.json`
+
 ## 배포 전 남은 작업
 
-- [ ] 인스타 포스트 ID 나머지 6개 교체 (`src/data/photozones.ts` — `prince-shiba`는 완료)
+- [ ] 인스타 포스트 ID 나머지 6개 교체 (`src/data/photozones.ts` `FALLBACK_PHOTOZONES` 또는 engine JSON — `prince-shiba`는 완료)
 - [ ] 유튜브 영상 ID 7개 교체 (`youtubeVideoId`)
 - [ ] 썸네일 이미지 7장 준비 → `public/images/thumbnails/`
 - [ ] OG 이미지 준비 → `public/images/og-image.png` (1200×630px 권장)

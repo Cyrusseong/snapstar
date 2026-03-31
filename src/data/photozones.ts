@@ -5,7 +5,7 @@ export const TOKYO_TOWER = {
   lng: 139.7454,
 };
 
-export const photozones: PhotoZone[] = [
+export const FALLBACK_PHOTOZONES: PhotoZone[] = [
   {
     id: 'prince-shiba',
     name: { ko: '프린스 시바공원', en: 'Prince Shiba Park', ja: 'プリンス芝公園' },
@@ -22,7 +22,7 @@ export const photozones: PhotoZone[] = [
       category: 'classic',
     },
     content: {
-      instagramPostId: 'INSTAGRAM_POST_ID_1',
+      instagramPostId: 'DMpppNRTDJ_',
       youtubeVideoId: 'YOUTUBE_VIDEO_ID_1',
       thumbnailUrl: '/images/thumbnails/prince-shiba.jpg',
     },
