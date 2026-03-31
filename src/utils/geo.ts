@@ -27,6 +27,23 @@ export function destinationPoint(
   return [(λ2 * 180) / Math.PI, (φ2 * 180) / Math.PI];
 }
 
+// 두 좌표 사이의 heading(방위각, 0~360°) 계산
+export function calculateHeading(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+  return ((θ * 180) / Math.PI + 360) % 360;
+}
+
 // 포토존의 촬영 방향 GeoJSON 생성
 // features: 부채꼴 Polygon (arc) + 중심 화살표 LineString (arrow)
 export function createDirectionGeoJSON(zone: PhotoZone): GeoJSON.FeatureCollection {

@@ -12,8 +12,21 @@ import { useTour } from './hooks/useTour';
 import { usePhotozones } from './hooks/usePhotozones';
 import { flyToPhotoZone, flyToOverview, toggle3DDirection, setMapLanguage, type MapLang } from './utils/camera';
 import type { PhotoZone } from './types/photozone';
+import EditMode from './components/Editor/EditMode';
+
+// ?mode=edit → 에디트 모드 활성화
+const isEditMode = new URLSearchParams(window.location.search).get('mode') === 'edit';
 
 export default function App() {
+  // 에디트 모드는 별도 컴포넌트로 완전 분리
+  if (isEditMode) {
+    return <EditMode />;
+  }
+
+  return <ViewModeApp />;
+}
+
+function ViewModeApp() {
   const mapRef = useMap();
   const { photozones, isLoading: photozonesLoading } = usePhotozones();
   const { selectedZone, setSelectedZone, clearSelection, viewMode, setViewMode } = usePhotoZone();

@@ -20,7 +20,14 @@ src/
 ├── index.css                      ← Tailwind + MapLibre CSS + spin 키프레임
 ├── data/photozones.ts             ← 7개 포토존 데이터 (ID 1개 실제값 적용)
 ├── types/photozone.ts             ← PhotoZone, MapViewState 타입
+├── lib/
+│   └── api.ts                     ← engine API 클라이언트 (에디트 모드 전용)
 ├── components/
+│   ├── Editor/
+│   │   ├── EditMode.tsx           ← 에디트 모드 메인 컨테이너 (?mode=edit)
+│   │   ├── EditPhotoZoneList.tsx  ← draft/published 포토존 목록 + 필터
+│   │   ├── DraggablePin.tsx       ← 2핀 드래그 맵 (별도 MapLibre 인스턴스)
+│   │   └── EditPanel.tsx          ← 폼 (텍스트/슬라이더/저장 버튼)
 │   ├── Map/MapView.tsx            ← MapLibre 지도 + 마커/방향/3D 통합
 │   ├── Map/PhotoMarker.tsx        ← 인스타 썸네일 마커 (호버 떨림 버그 수정 완료)
 │   ├── Map/DirectionArrow.tsx     ← 촬영 방향 화살표+부채꼴 레이어
@@ -40,7 +47,7 @@ src/
 │   ├── useTour.ts                 ← 투어 모드 로직
 │   └── usePhotozones.ts           ← JSON fetch + 폴백 훅
 └── utils/
-    ├── geo.ts                     ← destinationPoint + createDirectionGeoJSON
+    ├── geo.ts                     ← destinationPoint + createDirectionGeoJSON + calculateHeading
     └── camera.ts                  ← flyToPhotoZone / flyToOverview / toggle3DDirection / setMapLanguage
 ```
 
@@ -115,6 +122,36 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - `MapView`, `PhotoZoneNav`: `photozones` 직접 import 제거 → `zones` prop으로 받도록 변경
 - engine에서 JSON export: `python export.py --output ../snapstar/public/data/photozones.json`
 
+## 에디트 모드 (관리자)
+
+### 진입 방법
+```
+http://localhost:5173/?mode=edit
+```
+- URL에 `?mode=edit` 파라미터 → EditMode 컴포넌트 렌더링 (뷰 모드 완전 분리)
+- `[🔙 뷰]` 버튼 → `?mode` 파라미터 제거 후 뷰 모드 복귀
+
+### 사전 조건
+- `snapstar-engine` 서버 실행 필요: `python server.py` (기본 포트 8000)
+- engine 서버가 꺼져 있어도 에디트 모드 UI는 표시됨 (에러 메시지 표시)
+
+### 2핀 시스템
+- **📍 촬영자 핀 (파란색)**: 포토존의 `lat`, `lng` 위치. 드래그로 이동
+- **🎯 타겟 핀 (빨간색)**: 촬영 방향 끝점. 초기 위치 = `destinationPoint(lat, lng, 200m, heading)`
+- 타겟 핀 드래그 → 두 핀 사이의 heading 자동 계산 (`calculateHeading`)
+- 촬영자 핀 드래그 → lat/lng 변경, heading 재계산 (타겟 핀 위치 유지)
+- 부채꼴 FOV 시각화 실시간 업데이트
+
+### 저장 플로우
+1. **[💾 저장 (draft)]** → PUT /api/photozones/{id} (status=draft)
+2. **[✅ Published로 저장]** → PUT + POST /api/photozones/export (JSON 파일 생성)
+3. **[💾 전체 Export]** → POST /api/photozones/export (published 전체 export)
+
+### 환경 변수
+| 변수명 | 기본값 | 설명 |
+|--------|--------|------|
+| `VITE_API_BASE` | `http://localhost:8000` | engine API 서버 주소 |
+
 ## 배포 전 남은 작업
 
 - [ ] 인스타 포스트 ID 나머지 6개 교체 (`src/data/photozones.ts` `FALLBACK_PHOTOZONES` 또는 engine JSON — `prince-shiba`는 완료)
@@ -165,6 +202,18 @@ MapTiler 무료 계정: https://cloud.maptiler.com/account/
 - MapTiler streets-v2: `maptiler_planet` (source-layer: `building`, 속성: `height`, `min_height`)
 - 두 속성 모두 `coalesce`로 처리하므로 어느 쪽이든 작동
 - 소스 탐지 실패 시 콘솔에 `[Buildings3D]` 경고 + `Object.keys(sources)` 출력
+
+## thumbnailUrl 폴백 동작
+
+`InstagramEmbed` 컴포넌트는 `thumbnailUrl` prop을 받아 폴백 이미지를 표시한다:
+- postId가 placeholder(`INSTAGRAM_POST_ID`로 시작) + thumbnailUrl 있음 → 이미지 + "📷 Instagram에서 보기" 오버레이
+- postId가 placeholder + thumbnailUrl 없음 → 기존 회색 박스
+- 실제 postId + thumbnailUrl 있음 → 클릭 가능 썸네일 링크(IG 새탭) + 아래 embed 로드
+- 실제 postId + thumbnailUrl 없음 → embed만 로드
+
+`PhotoZonePanel`, `BottomSheet` 모두 `thumbnailUrl={zone.content.thumbnailUrl}` 전달 중.
+
+`PhotoMarker.tsx`는 이미 thumbnailUrl 이미지 로드 → backgroundImage 설정, 실패 시 이모지 폴백 구조.
 
 ## Instagram embed.js 주의사항
 
