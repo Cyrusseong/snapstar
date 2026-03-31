@@ -49,7 +49,7 @@ export function PhotoZonePanel({ zone, onClose }: Props) {
           {/* 스크롤 가능한 콘텐츠 영역 */}
           <div className="flex-1 overflow-y-auto">
             <div className="py-4 space-y-4">
-              <InstagramEmbed postId={zone.content.instagramPostId} />
+              <InstagramEmbed postId={zone.content.instagramPostId} thumbnailUrl={zone.content.thumbnailUrl} />
               <ShootingInfo zone={zone} />
               <YouTubePlayer videoId={zone.content.youtubeVideoId} />
 

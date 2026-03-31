@@ -127,7 +127,7 @@ export function BottomSheet({ zone, onClose }: Props) {
       {/* 스크롤 콘텐츠 */}
       <div className="flex-1 overflow-y-auto">
         <div className="py-2 space-y-4 pb-4">
-          <InstagramEmbed postId={zone.content.instagramPostId} />
+          <InstagramEmbed postId={zone.content.instagramPostId} thumbnailUrl={zone.content.thumbnailUrl} />
           <ShootingInfo zone={zone} />
           <YouTubePlayer videoId={zone.content.youtubeVideoId} />
 
